@@ -44,7 +44,6 @@ let login = async () => {
       throw (response);
     }
 
-    // console.log(response.headers);
     let cookies = [];
     response.headers['set-cookie'].forEach(element => {
       cookies.push(cookie.parse(element));
