@@ -1,8 +1,27 @@
 const request = require('request-promise-native');
 const base_url = "https://forums.somethingawful.com/";
-const fs = require('fs');
-const settings = JSON.parse(fs.readFileSync('settings.json'));
 const cookie = require('cookie');
+
+let easify = (list) => {
+  let retVal = [];
+  list.forEach(element => {
+    Object.keys(element).forEach(item => {
+      switch (item) {
+        case "__cfduid":
+        case "bbuserid":
+        case "bbpassword":
+          {
+            retVal.push({
+              name: item,
+              value: element[item]
+            });
+          };
+        default: return;
+      }
+    });
+  });
+  return retVal;
+}
 
 let urlify = (str) => {
   let retVal = "";
@@ -21,17 +40,15 @@ let urlify = (str) => {
   return base_url + retVal;
 };
 
-let login = async () => {
+let login = async (username, password) => {
   let login_endpoint = urlify("account.php");
-  let username = settings.username;
-  let password = settings.password;
   let options = {
     method: "POST",
     uri: login_endpoint,
     form: {
       action: "login",
-      username: username,
-      password: password,
+      username,
+      password,
       next: '/'
     },
     simple: false,
@@ -48,11 +65,12 @@ let login = async () => {
     response.headers['set-cookie'].forEach(element => {
       cookies.push(cookie.parse(element));
     });
-
-    return cookies;
+    return easify(cookies);
   } catch (error) {
     console.log(error)
   }
 };
 
-login().then(console.log);
+module.exports = {
+  login: future.encaseP2(login)
+}
