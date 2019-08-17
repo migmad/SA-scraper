@@ -1,19 +1,22 @@
 {
-  "name": "sa_image_thing",
+  "name": "somethingawful_image_scraper",
+  "namespace": false,
   "version": "0.1.0",
   "sources": {
-    "dir" : "src",
-    "subdirs" : true
+    "dir": "src",
+    "subdirs": true
   },
   "package-specs": {
     "module": "commonjs",
     "in-source": true
   },
   "suffix": ".bs.js",
-  "bs-dependencies": ["bs-fluture"],
+  "bs-dependencies": [
+    "bs-fluture",
+    "@quartz55/relog"
+  ],
   "warnings": {
-    "error" : "+101"
+    "error": "+101"
   },
-  "namespace": true,
   "refmt": 3
 }
