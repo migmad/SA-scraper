@@ -9,6 +9,14 @@ type credentials = {
   password: string,
 };
 
+[@bs.deriving abstract]
+type post_item = {
+  postID: string,
+  posterID: string,
+  posterUsername: string,
+  img: string,
+};
+
 module L =
   Relog.Relog.Make({
     let namespace = "FFI";
@@ -20,7 +28,8 @@ external credentials_to_cookies_:
   "login";
 
 [@bs.module "../sa_interface/sa_traverse.js"]
-external traverse_: (list(cookie), int, int) => Js.Promise.t(string) =
+external traverse_:
+  (list(cookie), int, int) => Js.Promise.t(list(post_item)) =
   "traverse_page";
 
 [@bs.module "fs"] external path_to_cfg: string => string = "readFileSync";
