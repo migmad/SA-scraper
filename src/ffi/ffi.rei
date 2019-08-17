@@ -13,4 +13,5 @@ type post_item = {
 };
 
 let cfg_to_cookies: string => Js.Promise.t(list(cookie));
-let traverse: (list(cookie), int, int) => Js.Promise.t(list(post_item));
+let traverse: (list(cookie), int, int) => Js.Promise.t(string);
+let extract_images: (string, int) => list(post_item);

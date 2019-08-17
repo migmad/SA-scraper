@@ -22,6 +22,7 @@ let main = () => {
            1,
          );
        })
+    |> Future.map(result => Ffi.extract_images(result, 0))
     |> Future.map(result => Js.log(result))
     |> Future.fork(_ => (), _ => ());
   ();

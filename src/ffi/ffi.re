@@ -28,9 +28,11 @@ external credentials_to_cookies_:
   "login";
 
 [@bs.module "../sa_interface/sa_traverse.js"]
-external traverse_:
-  (list(cookie), int, int) => Js.Promise.t(list(post_item)) =
+external traverse_: (list(cookie), int, int) => Js.Promise.t(string) =
   "traverse_page";
+
+[@bs.module "../sa_interface/sa_extract_images.js"]
+external extract_images_: string => list(post_item) = "extract_images";
 
 [@bs.module "fs"] external path_to_cfg: string => string = "readFileSync";
 
@@ -86,6 +88,11 @@ let cfg_to_credentials_exn = str => {
     };
 
   {username, password};
+};
+
+let extract_images = (html, page) => {
+  L.info(m => m("Extracting images from posts of page #%d", page));
+  extract_images_(html);
 };
 
 let traverse = (cookies, threadID, page) => {
