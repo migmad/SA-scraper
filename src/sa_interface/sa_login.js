@@ -1,6 +1,6 @@
 const request = require('request-promise-native');
-const base_url = "https://forums.somethingawful.com/";
 const cookie = require('cookie');
+const { urlify } = require('../sa_interface/sa_utils.js');
 
 let easify = (list) => {
   let retVal = [];
@@ -22,23 +22,6 @@ let easify = (list) => {
   });
   return retVal;
 }
-
-let urlify = (str) => {
-  let retVal = "";
-
-  if (str[0] === '/') {
-    retVal = str.slice(1);
-  }
-  else {
-    retVal = str;
-  }
-
-  if (retVal[retVal.length - 1] === '/') {
-    retVal = retVal.slice(0, retVal.length - 1);
-  }
-
-  return base_url + retVal;
-};
 
 let login = async (username, password) => {
   let login_endpoint = urlify("account.php");
@@ -72,5 +55,5 @@ let login = async (username, password) => {
 };
 
 module.exports = {
-  login: future.encaseP2(login)
+  login
 }
