@@ -13,7 +13,15 @@ let main = () => {
   let _ =
     config_file_path
     |> Future.encaseP(path => Ffi.cfg_to_cookies(path))
-    |> Future.map(cookies => Js.log(cookies))
+    |> Future.chain(cookies =>
+         Future.encaseP3(
+           (p1, p2, p3) => Ffi.traverse(p1, p2, p3),
+           cookies,
+           3890144,
+           1,
+         )
+       )
+    |> Future.map(result => Js.log(result))
     |> Future.fork(_ => (), _ => ());
   ();
 };

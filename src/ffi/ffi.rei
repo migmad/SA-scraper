@@ -5,3 +5,4 @@ type cookie = {
 };
 
 let cfg_to_cookies: string => Js.Promise.t(list(cookie));
+let traverse: (list(cookie), int, int) => Js.Promise.t(string);

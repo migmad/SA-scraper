@@ -9,8 +9,6 @@ type credentials = {
   password: string,
 };
 
-// module Future = BsFluture;
-
 module L =
   Relog.Relog.Make({
     let namespace = "FFI";
@@ -20,6 +18,10 @@ module L =
 external credentials_to_cookies_:
   (string, string) => Js.Promise.t(list(cookie)) =
   "login";
+
+[@bs.module "../sa_interface/sa_traverse.js"]
+external traverse_: (list(cookie), int, int) => Js.Promise.t(string) =
+  "traverse_page";
 
 [@bs.module "fs"] external path_to_cfg: string => string = "readFileSync";
 
@@ -75,6 +77,11 @@ let cfg_to_credentials_exn = str => {
     };
 
   {username, password};
+};
+
+let traverse = (cookies, threadID, page) => {
+  L.info(m => m("Requesting thread #%d page#%d", threadID, page));
+  traverse_(cookies, threadID, page);
 };
 
 let cfg_to_cookies = path =>
