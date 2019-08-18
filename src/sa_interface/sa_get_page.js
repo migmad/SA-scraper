@@ -1,16 +1,16 @@
-const { urlify } = require('../sa_interface/sa_utils.js');
+const { urlify } = require('./sa_utils.js');
 
-let traverse_page = async (cookies, threadID, page) => {
+let get_page = async (cookies, threadID, page) => {
   const request = require('request-promise-native');
   let per_page = 40;
-  let thread_endpoint = urlify(`showthread.php?threadid=${threadID}&perpage=${per_page}&page=${page}`);
+  let thread_endpoint = urlify(`showthread.php?threadid=${threadID}&perpage=${per_page}&pagenumber=${page}`);
   let cookie_str = "";
 
   cookies.forEach(cookie => {
     cookie_str = cookie_str + `${cookie.name}=${cookie.value}; `;
   });
 
-  console.log(cookie_str);
+  // console.log(cookie_str);
 
   let options = {
     method: "GET",
@@ -30,12 +30,12 @@ let traverse_page = async (cookies, threadID, page) => {
     //   "--------------------------------------------------------------------------------\n"
     //   , response.body.includes("JOINING THE SA FORUMS WILL REMOVE THIS BIG AD, THE ANNOYING UNDERLINED ADS, AND STUPID INTERSTITIAL ADS!!")
     //   , "\n--------------------------------------------------------------------------------")
-    return response.body;
+    return [cookies, response.body];
   } catch (error) {
     console.log(error)
   }
 };
 
 module.exports = {
-  traverse_page
+  get_page
 }
