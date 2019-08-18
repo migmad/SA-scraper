@@ -17,27 +17,41 @@ type post_item = {
   img: string,
 };
 
+[@bs.deriving abstract]
+type thread = {
+  threadID: int,
+  thread_page_count: int,
+  cookies: list(cookie),
+};
 module L =
   Relog.Relog.Make({
     let namespace = "FFI";
   });
+
+module Future = BsFluture;
+
+open Modules;
 
 [@bs.module "../sa_interface/sa_login.js"]
 external credentials_to_cookies_:
   (string, string) => Js.Promise.t(list(cookie)) =
   "login";
 
-[@bs.module "../sa_interface/sa_traverse.js"]
-external traverse_: (list(cookie), int, int) => Js.Promise.t(string) =
-  "traverse_page";
+[@bs.module "../sa_interface/sa_get_page.js"]
+external get_page_:
+  (list(cookie), int, int) => Js.Promise.t((list(cookie), string)) =
+  "get_page";
 
 [@bs.module "../sa_interface/sa_extract_images.js"]
-external extract_images_: string => list(post_item) = "extract_images";
+external get_page_images_: string => list(post_item) = "extract_images";
+
+[@bs.module "../sa_interface/sa_get_page_count.js"]
+external get_page_count_: string => int = "get_page_count";
 
 [@bs.module "fs"] external path_to_cfg: string => string = "readFileSync";
 
 let credentials_to_cookies = ({username, password}) => {
-  L.info(m => m("Fetching cookies for user: %s", username));
+  L.debug(m => m("Fetching cookies for user: %s", username));
   credentials_to_cookies_(username, password);
 };
 
@@ -90,15 +104,39 @@ let cfg_to_credentials_exn = str => {
   {username, password};
 };
 
-let extract_images = (html, page) => {
-  L.info(m => m("Extracting images from posts of page #%d", page));
-  extract_images_(html);
+let get_page_images = html => {
+  L.debug(m => m("Parsing page..."));
+  get_page_images_(html);
 };
 
-let traverse = (cookies, threadID, page) => {
-  L.info(m => m("Requesting thread #%d page#%d", threadID, page));
-  traverse_(cookies, threadID, page);
+let get_page_count = html => {
+  let num_pages = get_page_count_(html);
+  L.debug(m => m("Thread has %d pages", num_pages));
+  num_pages;
+};
+
+let get_page = (cookies, threadID, page) => {
+  L.debug(m => m("Requesting thread #%d page#%d", threadID, page));
+  get_page_(cookies, threadID, page);
 };
 
 let cfg_to_cookies = path =>
   path |> path_to_cfg |> cfg_to_credentials_exn |> credentials_to_cookies;
+
+let get_thread_essentials = (config_file_path, threadID) => {
+  config_file_path
+  |> Future.encaseP(path => cfg_to_cookies(path))
+  |> Future.map(cookies => (cookies, threadID))
+  |> Future.chain(((cookies, threadID)) =>
+       Future.encaseP3(
+         (p1, p2, p3) => get_page(p1, p2, p3),
+         cookies,
+         threadID,
+         1,
+       )
+     )
+  |> Future.map(((cookies, html)) => {
+       let page_count = get_page_count(html);
+       thread(~threadID, ~thread_page_count=page_count, ~cookies);
+     });
+};

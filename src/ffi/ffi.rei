@@ -1,7 +1,18 @@
+open Modules;
+
+module Future = BsFluture;
+
 [@bs.deriving abstract]
 type cookie = {
   name: string,
   value: string,
+};
+
+[@bs.deriving abstract]
+type thread = {
+  threadID: int,
+  thread_page_count: int,
+  cookies: list(cookie),
 };
 
 [@bs.deriving abstract]
@@ -13,5 +24,7 @@ type post_item = {
 };
 
 let cfg_to_cookies: string => Js.Promise.t(list(cookie));
-let traverse: (list(cookie), int, int) => Js.Promise.t(string);
-let extract_images: (string, int) => list(post_item);
+let get_page:
+  (list(cookie), int, int) => Js.Promise.t((list(cookie), string));
+let get_page_images: string => list(post_item);
+let get_thread_essentials: (string, int) => Future.t(Js.Exn.t, thread);
