@@ -48,6 +48,9 @@ external get_page_images_: string => list(post_item) = "extract_images";
 [@bs.module "../sa_interface/sa_get_page_count.js"]
 external get_page_count_: string => int = "get_page_count";
 
+[@bs.module "../persist/persist.js"]
+external persist_images_fs_: list(post_item) => unit = "download_many";
+
 [@bs.module "fs"] external path_to_cfg: string => string = "readFileSync";
 
 let credentials_to_cookies = ({username, password}) => {
@@ -102,6 +105,11 @@ let cfg_to_credentials_exn = str => {
     };
 
   {username, password};
+};
+
+let persist_images_fs = posts => {
+  L.debug(m => m("Persisting %d images...", List.length(posts)));
+  persist_images_fs_(posts);
 };
 
 let get_page_images = html => {

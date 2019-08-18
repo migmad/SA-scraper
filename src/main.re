@@ -44,7 +44,7 @@ let main = () => {
 
   L.info(m => m("Reading config file at %s", config_file_path));
   let _ =
-    Ffi.get_thread_essentials(config_file_path, 3813092)
+    Ffi.get_thread_essentials(config_file_path, 3846392)
     |> Future.map(thread => {
          L.info(m =>
            m(
@@ -63,7 +63,7 @@ let main = () => {
            [],
          )
          |> future_iter(((_, html)) =>
-              html |> Ffi.get_page_images |> Js.log
+              html |> Ffi.get_page_images |> Ffi.persist_images_fs
             )
          |> Future.fork(_ => (), _ => ())
        )

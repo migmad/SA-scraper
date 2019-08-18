@@ -24,7 +24,7 @@ let get_page = async (cookies, threadID, page) => {
     resolveWithFullResponse: true,
   }
   try {
-    await delay(1000);
+    await delay(5000);
     let response = await request(options);
 
     if (response.statusCode >= 400) {
