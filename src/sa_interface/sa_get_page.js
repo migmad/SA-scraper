@@ -1,5 +1,9 @@
 const { urlify } = require('./sa_utils.js');
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 let get_page = async (cookies, threadID, page) => {
   const request = require('request-promise-native');
   let per_page = 40;
@@ -20,6 +24,7 @@ let get_page = async (cookies, threadID, page) => {
     resolveWithFullResponse: true,
   }
   try {
+    await delay(1000);
     let response = await request(options);
 
     if (response.statusCode >= 400) {
