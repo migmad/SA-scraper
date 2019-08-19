@@ -108,16 +108,9 @@ let cfg_to_credentials_exn = str => {
   {username, password};
 };
 
-let persist_images_fs = (delay, posts) => {
-  L.debug(m =>
-    m(
-      "Persisting %d images... after delay of %dms",
-      Array.length(posts),
-      delay,
-    )
-  );
-  Future.after(delay, ())
-  |> Future.chain(Future.encaseP(() => persist_images_fs_(posts)));
+let persist_images_fs = posts => {
+  L.debug(m => m("Got %d images to persist", Array.length(posts)));
+  posts |> Future.encaseP(posts => persist_images_fs_(posts));
 };
 
 let get_page_images = html => {

@@ -26,32 +26,38 @@ let rec generate_computation_list = (cookies, threadID, page, acc) => {
   };
 };
 
-let rec future_fold_left = (fn, acc, list, delay) => {
+let rec futures_fold_left = (fn, acc, list, delay) => {
   switch (list) {
   | [] => Future.resolve(acc)
   | [x, ...xs] =>
     x
     |> Future.chain(value => {
-         L.debug(m => m("Delaying HTTP request for %dms", delay));
+         L.debug(m => m("Delaying for %dms", delay));
          Future.after(delay, value);
        })
-    |> Future.chain(value => future_fold_left(fn, fn(acc, value), xs, delay))
+    |> Future.chain(((_cookies, html)) =>
+         html |> Ffi.get_page_images |> Ffi.persist_images_fs
+       )
+    |> Future.chain(value =>
+         futures_fold_left(fn, fn(acc, value), xs, delay)
+       )
   };
 };
 
 let future_iter = (delay, fn, list) => {
-  future_fold_left(((), v) => fn(v), (), list, delay);
+  futures_fold_left(((), v) => fn(v), (), list, delay);
 };
 
 let main = () => {
   Logger.setReporter(Logger.format_reporter(~level=Logger.Level.Debug, ()));
   let config_file_path = "./settings.json";
-  let delay = 5000; //in miliseconds
+  let delay = 2500; //in miliseconds
+  let threadID = 3846392;
 
   L.info(m => m("Reading config file at %s", config_file_path));
   let _ =
-    Ffi.get_thread_essentials(config_file_path, 3846392)
-    |> Future.map(thread => {
+    Ffi.get_thread_essentials(config_file_path, threadID)
+    |> Future.chain(thread => {
          L.info(m =>
            m(
              "Got essential thread information.\nThread: %d\nPages: %d",
@@ -65,20 +71,11 @@ let main = () => {
            thread->Ffi.thread_page_countGet,
            [],
          )
-         |> future_iter(delay, ((_, html)) =>
-              html
-              |> Ffi.get_page_images
-              |> Ffi.persist_images_fs(delay)
-              |> Future.map(value =>
-                   value
-                   |> Array.iter(item => L.info(m => m("Persist: %s", item)))
-                 )
-              |> Future.fork(_ => (), _ => ())
-              |> ignore
-            )
-         |> Future.fork(_ => (), _ => ());
+         |> future_iter(delay, value =>
+              value |> Array.iter(item => L.info(m => m("Persist: %s", item)))
+            );
        })
-    |> Future.fork(_ => (), _ => ());
+    |> Future.fork(_ => (), _ => L.info(m => m("Done.")));
   ();
 };
 
