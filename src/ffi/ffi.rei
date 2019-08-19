@@ -12,7 +12,7 @@ type cookie = {
 type thread = {
   threadID: int,
   thread_page_count: int,
-  cookies: list(cookie),
+  cookies: array(cookie),
 };
 
 [@bs.deriving abstract]
@@ -23,9 +23,10 @@ type post_item = {
   img: string,
 };
 
-let cfg_to_cookies: string => Js.Promise.t(list(cookie));
+let cfg_to_cookies: string => Js.Promise.t(array(cookie));
 let get_page:
-  (list(cookie), int, int) => Js.Promise.t((list(cookie), string));
-let get_page_images: string => list(post_item);
-let persist_images_fs: list(post_item) => unit;
+  (array(cookie), int, int) => Js.Promise.t((array(cookie), string));
+let get_page_images: string => array(post_item);
+let persist_images_fs:
+  (int, array(post_item)) => Future.t(Js.Exn.t, array(string));
 let get_thread_essentials: (string, int) => Future.t(Js.Exn.t, thread);

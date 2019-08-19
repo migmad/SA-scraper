@@ -32,7 +32,7 @@ let rec future_fold_left = (fn, acc, list, delay) => {
   | [x, ...xs] =>
     x
     |> Future.chain(value => {
-         L.info(m => m("Delaying for %dms", delay));
+         L.debug(m => m("Delaying HTTP request for %dms", delay));
          Future.after(delay, value);
        })
     |> Future.chain(value => future_fold_left(fn, fn(acc, value), xs, delay))
@@ -46,6 +46,7 @@ let future_iter = (delay, fn, list) => {
 let main = () => {
   Logger.setReporter(Logger.format_reporter(~level=Logger.Level.Debug, ()));
   let config_file_path = "./settings.json";
+  let delay = 5000; //in miliseconds
 
   L.info(m => m("Reading config file at %s", config_file_path));
   let _ =
@@ -64,8 +65,16 @@ let main = () => {
            thread->Ffi.thread_page_countGet,
            [],
          )
-         |> future_iter(5000, ((_, html)) =>
-              html |> Ffi.get_page_images |> Ffi.persist_images_fs
+         |> future_iter(delay, ((_, html)) =>
+              html
+              |> Ffi.get_page_images
+              |> Ffi.persist_images_fs(delay)
+              |> Future.map(value =>
+                   value
+                   |> Array.iter(item => L.info(m => m("Persist: %s", item)))
+                 )
+              |> Future.fork(_ => (), _ => ())
+              |> ignore
             )
          |> Future.fork(_ => (), _ => ());
        })

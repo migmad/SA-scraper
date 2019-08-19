@@ -21,7 +21,7 @@ type post_item = {
 type thread = {
   threadID: int,
   thread_page_count: int,
-  cookies: list(cookie),
+  cookies: array(cookie),
 };
 module L =
   Relog.Relog.Make({
@@ -34,22 +34,23 @@ open Modules;
 
 [@bs.module "../sa_interface/sa_login.js"]
 external credentials_to_cookies_:
-  (string, string) => Js.Promise.t(list(cookie)) =
+  (string, string) => Js.Promise.t(array(cookie)) =
   "login";
 
 [@bs.module "../sa_interface/sa_get_page.js"]
 external get_page_:
-  (list(cookie), int, int) => Js.Promise.t((list(cookie), string)) =
+  (array(cookie), int, int) => Js.Promise.t((array(cookie), string)) =
   "get_page";
 
 [@bs.module "../sa_interface/sa_extract_images.js"]
-external get_page_images_: string => list(post_item) = "extract_images";
+external get_page_images_: string => array(post_item) = "extract_images";
 
 [@bs.module "../sa_interface/sa_get_page_count.js"]
 external get_page_count_: string => int = "get_page_count";
 
 [@bs.module "../persist/persist.js"]
-external persist_images_fs_: list(post_item) => unit = "download_many";
+external persist_images_fs_: array(post_item) => Js.Promise.t(array(string)) =
+  "download_many";
 
 [@bs.module "fs"] external path_to_cfg: string => string = "readFileSync";
 
@@ -107,9 +108,16 @@ let cfg_to_credentials_exn = str => {
   {username, password};
 };
 
-let persist_images_fs = posts => {
-  L.debug(m => m("Persisting %d images...", List.length(posts)));
-  persist_images_fs_(posts);
+let persist_images_fs = (delay, posts) => {
+  L.debug(m =>
+    m(
+      "Persisting %d images... after delay of %dms",
+      Array.length(posts),
+      delay,
+    )
+  );
+  Future.after(delay, ())
+  |> Future.chain(Future.encaseP(() => persist_images_fs_(posts)));
 };
 
 let get_page_images = html => {
