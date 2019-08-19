@@ -26,16 +26,21 @@ let rec generate_computation_list = (cookies, threadID, page, acc) => {
   };
 };
 
-let rec future_fold_left = (fn, acc, list) => {
+let rec future_fold_left = (fn, acc, list, delay) => {
   switch (list) {
   | [] => Future.resolve(acc)
   | [x, ...xs] =>
-    x |> Future.chain(value => future_fold_left(fn, fn(acc, value), xs))
+    x
+    |> Future.chain(value => {
+         L.info(m => m("Delaying for %dms", delay));
+         Future.after(delay, value);
+       })
+    |> Future.chain(value => future_fold_left(fn, fn(acc, value), xs, delay))
   };
 };
 
-let future_iter = (fn, list) => {
-  future_fold_left(((), v) => fn(v), (), list);
+let future_iter = (delay, fn, list) => {
+  future_fold_left(((), v) => fn(v), (), list, delay);
 };
 
 let main = () => {
@@ -59,7 +64,7 @@ let main = () => {
            thread->Ffi.thread_page_countGet,
            [],
          )
-         |> future_iter(((_, html)) =>
+         |> future_iter(5000, ((_, html)) =>
               html |> Ffi.get_page_images |> Ffi.persist_images_fs
             )
          |> Future.fork(_ => (), _ => ());
