@@ -53,9 +53,6 @@ let main = () => {
              thread->Ffi.thread_page_countGet,
            )
          );
-         thread;
-       })
-    |> Future.map(thread =>
          generate_computation_list(
            thread->Ffi.cookiesGet,
            thread->Ffi.threadIDGet,
@@ -65,8 +62,8 @@ let main = () => {
          |> future_iter(((_, html)) =>
               html |> Ffi.get_page_images |> Ffi.persist_images_fs
             )
-         |> Future.fork(_ => (), _ => ())
-       )
+         |> Future.fork(_ => (), _ => ());
+       })
     |> Future.fork(_ => (), _ => ());
   ();
 };
